@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install (with optional PyNaCl cross-check)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Run demo (asserts every property holds)
+        run: python examples/demo.py
+
+      - name: Run benchmarks
+        run: python examples/bench.py
+
+  pure-python:
+    # Confirm it works with ZERO third-party dependencies (no PyNaCl).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install core only
+        run: python -m pip install -e .
+      - name: Install pytest only (no PyNaCl)
+        run: python -m pip install pytest
+      - name: Tests + demo without PyNaCl
+        run: |
+          python -c "import importlib.util; assert importlib.util.find_spec('nacl') is None, 'PyNaCl must be absent for this job'"
+          python -m pytest -q
+          python examples/demo.py

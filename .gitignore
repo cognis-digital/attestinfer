@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+*.key.json
+key.json
+*.seed
+corpus.json
+corpus_priv.json
+transcript.json
+disclosure.json
+.DS_Store
